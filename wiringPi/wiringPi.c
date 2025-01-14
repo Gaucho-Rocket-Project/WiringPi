@@ -1086,135 +1086,135 @@ const char* GetPiRevision(char* line, int linelength, unsigned int* revision) {
 
 void piBoardId (int *model, int *rev, int *mem, int *maker, int *warranty)
 {
-  const int maxlength = 120;
-  char line [maxlength+1] ;
-  const char *c ;
-  unsigned int revision = 0x00 ;
-  int bRev, bType, bProc, bMfg, bMem, bWarranty ;
+//   const int maxlength = 120;
+//   char line [maxlength+1] ;
+//   const char *c ;
+//   unsigned int revision = 0x00 ;
+//   int bRev, bType, bProc, bMfg, bMem, bWarranty ;
 
-  //piGpioLayoutOops ("this is only a test case");
+//   //piGpioLayoutOops ("this is only a test case");
 
-  c = GetPiRevision(line, maxlength,  &revision); // device tree
-  if (NULL==c) {
-    c = GetPiRevisionLegacy(line, maxlength, &revision); // proc/cpuinfo
-  }
-  if (NULL==c) {
-    piGpioLayoutOops ("GetPiRevision failed!") ;
-  }
+//   c = GetPiRevision(line, maxlength,  &revision); // device tree
+//   if (NULL==c) {
+//     c = GetPiRevisionLegacy(line, maxlength, &revision); // proc/cpuinfo
+//   }
+//   if (NULL==c) {
+//     piGpioLayoutOops ("GetPiRevision failed!") ;
+//   }
 
-  if ((revision &  (1 << 23)) != 0)	// New style, not available for Raspberry Pi 1B/A, CM
-  {
-    if (wiringPiDebug)
-      printf ("piBoardId: New Way: revision is: %08X\n", revision) ;
+//   if ((revision &  (1 << 23)) != 0)	// New style, not available for Raspberry Pi 1B/A, CM
+//   {
+//     if (wiringPiDebug)
+//       printf ("piBoardId: New Way: revision is: %08X\n", revision) ;
 
-    bRev      = (revision & (0x0F <<  0)) >>  0 ;
-    bType     = (revision & (0xFF <<  4)) >>  4 ;
-    bProc     = (revision & (0x0F << 12)) >> 12 ;	// Not used for now.
-    bMfg      = (revision & (0x0F << 16)) >> 16 ;
-    bMem      = (revision & (0x07 << 20)) >> 20 ;
-    bWarranty = (revision & (0x03 << 24)) != 0 ;
+//     bRev      = (revision & (0x0F <<  0)) >>  0 ;
+//     bType     = (revision & (0xFF <<  4)) >>  4 ;
+//     bProc     = (revision & (0x0F << 12)) >> 12 ;	// Not used for now.
+//     bMfg      = (revision & (0x0F << 16)) >> 16 ;
+//     bMem      = (revision & (0x07 << 20)) >> 20 ;
+//     bWarranty = (revision & (0x03 << 24)) != 0 ;
 
-    // Ref: https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-revision-codes
-    *model    = bType ;
-    *rev      = bRev ;
-    *mem      = bMem ;
-    *maker    = bMfg  ;
-    *warranty = bWarranty ;
-    RaspberryPiLayout = GPIO_LAYOUT_DEFAULT ; //default
+//     // Ref: https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-revision-codes
+//     *model    = bType ;
+//     *rev      = bRev ;
+//     *mem      = bMem ;
+//     *maker    = bMfg  ;
+//     *warranty = bWarranty ;
+//     RaspberryPiLayout = GPIO_LAYOUT_DEFAULT ; //default
 
-    if (wiringPiDebug)
-      printf ("piBoardId: rev: %d, type: %d, proc: %d, mfg: %d, mem: %d, warranty: %d\n",
-		bRev, bType, bProc, bMfg, bMem, bWarranty) ;
-  }
-  else					// Old way
-  {
-    if (wiringPiDebug)
-      printf ("piBoardId: Old Way: revision is: %s\n", c) ;
+//     if (wiringPiDebug)
+//       printf ("piBoardId: rev: %d, type: %d, proc: %d, mfg: %d, mem: %d, warranty: %d\n",
+// 		bRev, bType, bProc, bMfg, bMem, bWarranty) ;
+//   }
+//   else					// Old way
+//   {
+//     if (wiringPiDebug)
+//       printf ("piBoardId: Old Way: revision is: %s\n", c) ;
 
-    if (!isdigit (*c))
-      piGpioLayoutOops ("Bogus \"Revision\" line (no digit at start of revision)") ;
+//     if (!isdigit (*c))
+//       piGpioLayoutOops ("Bogus \"Revision\" line (no digit at start of revision)") ;
 
-// Make sure its long enough
+// // Make sure its long enough
 
-    if (strlen (c) < 4)
-      piGpioLayoutOops ("Bogus \"Revision\" line (not long enough)") ;
+//     if (strlen (c) < 4)
+//       piGpioLayoutOops ("Bogus \"Revision\" line (not long enough)") ;
 
-// If longer than 4, we'll assume it's been overvolted
+// // If longer than 4, we'll assume it's been overvolted
 
-    *warranty = strlen (c) > 4 ;
+//     *warranty = strlen (c) > 4 ;
 
-// Extract last 4 characters:
+// // Extract last 4 characters:
 
-    c = c + strlen (c) - 4 ;
+//     c = c + strlen (c) - 4 ;
 
-// Fill out the replys as appropriate
-    RaspberryPiLayout = GPIO_LAYOUT_DEFAULT ; //default
-    /**/ if (strcmp (c, "0002") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1   ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; RaspberryPiLayout = GPIO_LAYOUT_PI1_REV1; }
-    else if (strcmp (c, "0003") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; RaspberryPiLayout = GPIO_LAYOUT_PI1_REV1; }
+// // Fill out the replys as appropriate
+//     RaspberryPiLayout = GPIO_LAYOUT_DEFAULT ; //default
+//     /**/ if (strcmp (c, "0002") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1   ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; RaspberryPiLayout = GPIO_LAYOUT_PI1_REV1; }
+//     else if (strcmp (c, "0003") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; RaspberryPiLayout = GPIO_LAYOUT_PI1_REV1; }
 
-    else if (strcmp (c, "0004") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "0005") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
-    else if (strcmp (c, "0006") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "0004") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "0005") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "0006") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
 
-    else if (strcmp (c, "0007") == 0) { *model = PI_MODEL_A  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
-    else if (strcmp (c, "0008") == 0) { *model = PI_MODEL_A  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_SONY ;  ; }
-    else if (strcmp (c, "0009") == 0) { *model = PI_MODEL_A  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "0007") == 0) { *model = PI_MODEL_A  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "0008") == 0) { *model = PI_MODEL_A  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_SONY ;  ; }
+//     else if (strcmp (c, "0009") == 0) { *model = PI_MODEL_A  ; *rev = PI_VERSION_1_2 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
 
-    else if (strcmp (c, "000d") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
-    else if (strcmp (c, "000e") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "000f") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "000d") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "000e") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "000f") == 0) { *model = PI_MODEL_B  ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
 
-    else if (strcmp (c, "0010") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "0013") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EMBEST  ; }
-    else if (strcmp (c, "0016") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "0019") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "0010") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "0013") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EMBEST  ; }
+//     else if (strcmp (c, "0016") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "0019") == 0) { *model = PI_MODEL_BP ; *rev = PI_VERSION_1_2 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
 
-    else if (strcmp (c, "0011") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "0014") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_EMBEST  ; }
-    else if (strcmp (c, "0017") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "001a") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "0011") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "0014") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_EMBEST  ; }
+//     else if (strcmp (c, "0017") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "001a") == 0) { *model = PI_MODEL_CM ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_EGOMAN  ; }
 
-    else if (strcmp (c, "0012") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "0015") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_EMBEST  ; }
-    else if (strcmp (c, "0018") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_SONY    ; }
-    else if (strcmp (c, "001b") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
+//     else if (strcmp (c, "0012") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "0015") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 1 ; *maker = PI_MAKER_EMBEST  ; }
+//     else if (strcmp (c, "0018") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_SONY    ; }
+//     else if (strcmp (c, "001b") == 0) { *model = PI_MODEL_AP ; *rev = PI_VERSION_1_1 ; *mem = 0 ; *maker = PI_MAKER_EGOMAN  ; }
 
-    else                              { *model = 0           ; *rev = 0              ; *mem =   0 ; *maker = 0 ;               }
-  }
+//     else                              { *model = 0           ; *rev = 0              ; *mem =   0 ; *maker = 0 ;               }
+//   }
 
-  RaspberryPiModel = *model;
+//   RaspberryPiModel = *model;
 
-  switch (RaspberryPiModel){
-    case PI_MODEL_A:
-    case PI_MODEL_B:
-    case PI_MODEL_AP:
-    case PI_MODEL_BP:
-    case PI_ALPHA:
-    case PI_MODEL_CM:
-    case PI_MODEL_ZERO:
-    case PI_MODEL_ZERO_W:
-      piGpioBase = GPIO_PERI_BASE_OLD ;
-      piGpioPupOffset = GPPUD ;
-      break ;
+//   switch (RaspberryPiModel){
+//     case PI_MODEL_A:
+//     case PI_MODEL_B:
+//     case PI_MODEL_AP:
+//     case PI_MODEL_BP:
+//     case PI_ALPHA:
+//     case PI_MODEL_CM:
+//     case PI_MODEL_ZERO:
+//     case PI_MODEL_ZERO_W:
+//       piGpioBase = GPIO_PERI_BASE_OLD ;
+//       piGpioPupOffset = GPPUD ;
+//       break ;
 
-    case PI_MODEL_4B:
-    case PI_MODEL_400:
-    case PI_MODEL_CM4:
-    case PI_MODEL_CM4S: 
-      piGpioBase = GPIO_PERI_BASE_2711 ;
-      piGpioPupOffset = GPPUPPDN0 ;
-      break ;
+//     case PI_MODEL_4B:
+//     case PI_MODEL_400:
+//     case PI_MODEL_CM4:
+//     case PI_MODEL_CM4S: 
+//       piGpioBase = GPIO_PERI_BASE_2711 ;
+//       piGpioPupOffset = GPPUPPDN0 ;
+//       break ;
 
-    case PI_MODEL_5:
-      piGpioBase = GPIO_PERI_BASE_2712 ;
-      piGpioPupOffset = 0 ;
-      break ;
+//     case PI_MODEL_5:
+//       piGpioBase = GPIO_PERI_BASE_2712 ;
+//       piGpioPupOffset = 0 ;
+//       break ;
 
-    default:
-      piGpioBase = GPIO_PERI_BASE_2835 ;
-      piGpioPupOffset = GPPUD ;
-      break ;
-  }
+//     default:
+//       piGpioBase = GPIO_PERI_BASE_2835 ;
+//       piGpioPupOffset = GPPUD ;
+//       break ;
+//   }
 }
 
 
