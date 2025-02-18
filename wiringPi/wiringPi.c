@@ -77,7 +77,7 @@
 
 #include "softPwm.h"
 #include "softTone.h"
-
+#include "logger.h"
 #include "wiringPi.h"
 #include "../version.h"
 #include "wiringPiLegacy.h"
@@ -1888,145 +1888,146 @@ void pinModeDevice (int pin, int mode) {
 
 void pinMode (int pin, int mode)
 {
-  int    fSel, shift, alt ;
-  struct wiringPiNodeStruct *node = wiringPiNodes ;
-  int origPin = pin ;
+  printf("Set pin %d to mode %d", pin,mode);
+  // int    fSel, shift, alt ;
+  // struct wiringPiNodeStruct *node = wiringPiNodes ;
+  // int origPin = pin ;
 
-  if (wiringPiDebug)
-    printf ("pinMode: pin:%d mode:%d\n", pin, mode) ;
+  // if (wiringPiDebug)
+  //   printf ("pinMode: pin:%d mode:%d\n", pin, mode) ;
 
-  setupCheck ("pinMode") ;
+  // setupCheck ("pinMode") ;
 
-  if ((pin & PI_GPIO_MASK) == 0)		// On-board pin
-  {
-    switch(wiringPiMode) {
-      default: //WPI_MODE_GPIO_SYS
-        fprintf(stderr, "pinMode: invalid mode\n");
-        return;
-      case WPI_MODE_PINS:
-        pin = pinToGpio [pin];
-        break;
-      case WPI_MODE_PHYS:
-        pin = physToGpio [pin];
-        break;
-      case WPI_MODE_GPIO_DEVICE_BCM:
-        pinModeDevice(pin, mode);
-        return;
-      case WPI_MODE_GPIO_DEVICE_WPI:
-        pinModeDevice(pinToGpio[pin], mode);
-        return;
-      case WPI_MODE_GPIO_DEVICE_PHYS:
-        pinModeDevice(physToGpio[pin], mode);
-        return;
-      case WPI_MODE_GPIO:
-        break;
-    }
+  // if ((pin & PI_GPIO_MASK) == 0)		// On-board pin
+  // {
+  //   switch(wiringPiMode) {
+  //     default: //WPI_MODE_GPIO_SYS
+  //       fprintf(stderr, "pinMode: invalid mode\n");
+  //       return;
+  //     case WPI_MODE_PINS:
+  //       pin = pinToGpio [pin];
+  //       break;
+  //     case WPI_MODE_PHYS:
+  //       pin = physToGpio [pin];
+  //       break;
+  //     case WPI_MODE_GPIO_DEVICE_BCM:
+  //       pinModeDevice(pin, mode);
+  //       return;
+  //     case WPI_MODE_GPIO_DEVICE_WPI:
+  //       pinModeDevice(pinToGpio[pin], mode);
+  //       return;
+  //     case WPI_MODE_GPIO_DEVICE_PHYS:
+  //       pinModeDevice(physToGpio[pin], mode);
+//         return;
+//       case WPI_MODE_GPIO:
+//         break;
+//     }
 
-    if (wiringPiDebug)
-      printf ("pinMode: bcm pin:%d mode:%d\n", pin, mode) ;
+//     if (wiringPiDebug)
+//       printf ("pinMode: bcm pin:%d mode:%d\n", pin, mode) ;
 
-    softPwmStop  (origPin) ;
-    softToneStop (origPin) ;
+//     softPwmStop  (origPin) ;
+//     softToneStop (origPin) ;
 
-    fSel    = gpioToGPFSEL [pin] ;
-    shift   = gpioToShift  [pin] ;
+//     fSel    = gpioToGPFSEL [pin] ;
+//     shift   = gpioToShift  [pin] ;
 
-    if (INPUT==mode  || PM_OFF==mode) {
-      if (PI_MODEL_5 == RaspberryPiModel) {
-        if (INPUT==mode) {
-          pads[1+pin] = (pin<=8) ? RP1_PAD_DEFAULT_0TO8 : RP1_PAD_DEFAULT_FROM9;
-          gpio[2*pin+1] = RP1_FSEL_GPIO | RP1_DEBOUNCE_DEFAULT; // GPIO
-          rio[RP1_RIO_OE + RP1_CLR_OFFSET] = 1<<pin;            // Input
-        } else  { //PM_OFF
-          pads[1+pin] = (pin<=8) ? RP1_PAD_IC_DEFAULT_0TO8 : RP1_PAD_IC_DEFAULT_FROM9;
-          gpio[2*pin+1] = RP1_IRQRESET | RP1_FSEL_NONE_HW | RP1_DEBOUNCE_DEFAULT; // default but with irq reset
-        }
-      } else {
-        *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) ; // Sets bits to zero = input
-      }
-      if (PM_OFF==mode && !usingGpioMem && pwm && gpioToPwmALT[pin]>0) { //PWM pin -> reset
-        pwmWrite(origPin, 0);
-        int channel = gpioToPwmPort[pin];
-        if (channel>=0 && channel<=3 && PI_MODEL_5 == RaspberryPiModel) {
-          unsigned int ctrl = pwm[RP1_PWM0_GLOBAL_CTRL];
-          pwm[RP1_PWM0_GLOBAL_CTRL] = (ctrl & ~(1<<channel)) | RP1_PWM_CTRL_SETUPDATE;
-          //printf("Disable PWM0[%d] (0x%08X->0x%08X)\n", channel, ctrl, pwm[RP1_PWM0_GLOBAL_CTRL]);
-        }
-      }
-    } else if (mode == OUTPUT) {
-      if (PI_MODEL_5 == RaspberryPiModel) {
-        pads[1+pin] = (pin<=8) ? RP1_PAD_DEFAULT_0TO8 : RP1_PAD_DEFAULT_FROM9;
-        gpio[2*pin+1] = RP1_FSEL_GPIO | RP1_DEBOUNCE_DEFAULT; // GPIO
-        rio[RP1_RIO_OE + RP1_SET_OFFSET] = 1<<pin;            // Output
-      } else {
-        *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (1 << shift) ;
-      }
-    } else if (mode == SOFT_PWM_OUTPUT) {
-      softPwmCreate (origPin, 0, 100) ;
-    } else if (mode == SOFT_TONE_OUTPUT) {
-      softToneCreate (origPin) ;
-    } else if (mode == PWM_TONE_OUTPUT)
-    {
-      pinMode (origPin, PWM_OUTPUT) ;	// Call myself to enable PWM mode
-      pwmSetMode (PWM_MODE_MS) ;
-    }
-    else if (PWM_OUTPUT==mode || PWM_MS_OUTPUT==mode || PWM_BAL_OUTPUT==mode) {
+//     if (INPUT==mode  || PM_OFF==mode) {
+//       if (PI_MODEL_5 == RaspberryPiModel) {
+//         if (INPUT==mode) {
+//           pads[1+pin] = (pin<=8) ? RP1_PAD_DEFAULT_0TO8 : RP1_PAD_DEFAULT_FROM9;
+//           gpio[2*pin+1] = RP1_FSEL_GPIO | RP1_DEBOUNCE_DEFAULT; // GPIO
+//           rio[RP1_RIO_OE + RP1_CLR_OFFSET] = 1<<pin;            // Input
+//         } else  { //PM_OFF
+//           pads[1+pin] = (pin<=8) ? RP1_PAD_IC_DEFAULT_0TO8 : RP1_PAD_IC_DEFAULT_FROM9;
+//           gpio[2*pin+1] = RP1_IRQRESET | RP1_FSEL_NONE_HW | RP1_DEBOUNCE_DEFAULT; // default but with irq reset
+//         }
+//       } else {
+//         *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) ; // Sets bits to zero = input
+//       }
+//       if (PM_OFF==mode && !usingGpioMem && pwm && gpioToPwmALT[pin]>0) { //PWM pin -> reset
+//         pwmWrite(origPin, 0);
+//         int channel = gpioToPwmPort[pin];
+//         if (channel>=0 && channel<=3 && PI_MODEL_5 == RaspberryPiModel) {
+//           unsigned int ctrl = pwm[RP1_PWM0_GLOBAL_CTRL];
+//           pwm[RP1_PWM0_GLOBAL_CTRL] = (ctrl & ~(1<<channel)) | RP1_PWM_CTRL_SETUPDATE;
+//           //printf("Disable PWM0[%d] (0x%08X->0x%08X)\n", channel, ctrl, pwm[RP1_PWM0_GLOBAL_CTRL]);
+//         }
+//       }
+//     } else if (mode == OUTPUT) {
+//       if (PI_MODEL_5 == RaspberryPiModel) {
+//         pads[1+pin] = (pin<=8) ? RP1_PAD_DEFAULT_0TO8 : RP1_PAD_DEFAULT_FROM9;
+//         gpio[2*pin+1] = RP1_FSEL_GPIO | RP1_DEBOUNCE_DEFAULT; // GPIO
+//         rio[RP1_RIO_OE + RP1_SET_OFFSET] = 1<<pin;            // Output
+//       } else {
+//         *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (1 << shift) ;
+//       }
+//     } else if (mode == SOFT_PWM_OUTPUT) {
+//       softPwmCreate (origPin, 0, 100) ;
+//     } else if (mode == SOFT_TONE_OUTPUT) {
+//       softToneCreate (origPin) ;
+//     } else if (mode == PWM_TONE_OUTPUT)
+//     {
+//       pinMode (origPin, PWM_OUTPUT) ;	// Call myself to enable PWM mode
+//       pwmSetMode (PWM_MODE_MS) ;
+//     }
+//     else if (PWM_OUTPUT==mode || PWM_MS_OUTPUT==mode || PWM_BAL_OUTPUT==mode) {
 
-      usingGpioMemCheck("pinMode PWM") ;  // exit on error!
-      alt = gpioToPwmALT[pin];
-      if (0==alt) {	// Not a hardware capable PWM pin
-	      return;
-      }
-      int channel = gpioToPwmPort[pin];
-      if (PI_MODEL_5 == RaspberryPiModel) {
-        if (channel>=0 && channel<=3) {
-          // enable channel pwm m:s mode
-          pwm[RP1_PWM0_CHAN_START+RP1_PWM0_CHAN_OFFSET*channel+RP1_PWM0_CHAN_CTRL]  = (RP1_PWM_TRAIL_EDGE_MS | RP1_PWM_FIFO_POP_MASK);
-          // enable pwm global
-          unsigned int ctrl = pwm[RP1_PWM0_GLOBAL_CTRL];
-          pwm[RP1_PWM0_GLOBAL_CTRL] = ctrl | (1<<channel) | RP1_PWM_CTRL_SETUPDATE;
-          //printf("Enable PWM0[%d] (0x%08X->0x%08X)\n", channel, ctrl, pwm[RP1_PWM0_GLOBAL_CTRL]);
-          //change GPIO mode
-          pads[1+pin] = RP1_PAD_DEFAULT_FROM9;  // enable output
-          pinModeAlt(origPin, alt); //switch to PWM mode
-        }
-      } else {
-        // Set pin to PWM mode
-        *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (alt << shift) ;
-        delayMicroseconds (110) ;		// See comments in pwmSetClockWPi
+//       usingGpioMemCheck("pinMode PWM") ;  // exit on error!
+//       alt = gpioToPwmALT[pin];
+//       if (0==alt) {	// Not a hardware capable PWM pin
+// 	      return;
+//       }
+//       int channel = gpioToPwmPort[pin];
+//       if (PI_MODEL_5 == RaspberryPiModel) {
+//         if (channel>=0 && channel<=3) {
+//           // enable channel pwm m:s mode
+//           pwm[RP1_PWM0_CHAN_START+RP1_PWM0_CHAN_OFFSET*channel+RP1_PWM0_CHAN_CTRL]  = (RP1_PWM_TRAIL_EDGE_MS | RP1_PWM_FIFO_POP_MASK);
+//           // enable pwm global
+//           unsigned int ctrl = pwm[RP1_PWM0_GLOBAL_CTRL];
+//           pwm[RP1_PWM0_GLOBAL_CTRL] = ctrl | (1<<channel) | RP1_PWM_CTRL_SETUPDATE;
+//           //printf("Enable PWM0[%d] (0x%08X->0x%08X)\n", channel, ctrl, pwm[RP1_PWM0_GLOBAL_CTRL]);
+//           //change GPIO mode
+//           pads[1+pin] = RP1_PAD_DEFAULT_FROM9;  // enable output
+//           pinModeAlt(origPin, alt); //switch to PWM mode
+//         }
+//       } else {
+//         // Set pin to PWM mode
+//         *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (alt << shift) ;
+//         delayMicroseconds (110) ;		// See comments in pwmSetClockWPi
 
-        if (PWM_OUTPUT==mode || PWM_BAL_OUTPUT==mode) {
-          pwmSetMode(PWM_MODE_BAL);	// Pi default mode
-        } else {
-          pwmSetMode(PWM_MODE_MS);
-        }
-      }
-      if (PWM_OUTPUT==mode) {  // predefine
-        pwmSetRange (1024) ;		// Default range of 1024
-        pwmSetClock (32) ;		// 19.2 / 32 = 600KHz - Also starts the PWM
-      }
-    }
-    else if (mode == GPIO_CLOCK)
-    {
-      RETURN_ON_MODEL5
-      if ((alt = gpioToGpClkALT0 [pin]) == 0)	// Not a GPIO_CLOCK pin
-	      return ;
+//         if (PWM_OUTPUT==mode || PWM_BAL_OUTPUT==mode) {
+//           pwmSetMode(PWM_MODE_BAL);	// Pi default mode
+//         } else {
+//           pwmSetMode(PWM_MODE_MS);
+//         }
+//       }
+//       if (PWM_OUTPUT==mode) {  // predefine
+//         pwmSetRange (1024) ;		// Default range of 1024
+//         pwmSetClock (32) ;		// 19.2 / 32 = 600KHz - Also starts the PWM
+//       }
+//     }
+//     else if (mode == GPIO_CLOCK)
+//     {
+//       RETURN_ON_MODEL5
+//       if ((alt = gpioToGpClkALT0 [pin]) == 0)	// Not a GPIO_CLOCK pin
+// 	      return ;
 
-      usingGpioMemCheck ("pinMode CLOCK") ;
+//       usingGpioMemCheck ("pinMode CLOCK") ;
 
-// Set pin to GPIO_CLOCK mode and set the clock frequency to 100KHz
+// // Set pin to GPIO_CLOCK mode and set the clock frequency to 100KHz
 
-      *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (alt << shift) ;
-      delayMicroseconds (110) ;
-      gpioClockSet      (pin, 100000) ;
-    }
-  }
-  else
-  {
-    if ((node = wiringPiFindNode (pin)) != NULL)
-      node->pinMode (node, pin, mode) ;
-    return ;
-  }
+//       *(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (alt << shift) ;
+//       delayMicroseconds (110) ;
+//       gpioClockSet      (pin, 100000) ;
+//     }
+//   }
+//   else
+//   {
+//     if ((node = wiringPiFindNode (pin)) != NULL)
+//       node->pinMode (node, pin, mode) ;
+//     return ;
+//   }
 }
 
 
@@ -2264,47 +2265,49 @@ void digitalWriteDevice (int pin, int value) {
 
 void digitalWrite (int pin, int value)
 {
-  struct wiringPiNodeStruct *node = wiringPiNodes ;
+  printf("Sending signal to pin %d with value %d",pin,value);
+  //struct wiringPiNodeStruct *node = wiringPiNodes ;
 
-  if ((pin & PI_GPIO_MASK) == 0)		// On-Board Pin
-  {
-    switch(wiringPiMode) {
-      default: //WPI_MODE_GPIO_SYS
-        fprintf(stderr, "digitalWrite: invalid mode\n");
-        return;
-      case WPI_MODE_PINS:
-        pin = pinToGpio [pin];
-        break;
-      case WPI_MODE_PHYS:
-        pin = physToGpio [pin];
-        break;
-      case WPI_MODE_GPIO_DEVICE_BCM:
-        digitalWriteDevice(pin, value);
-        return;
-      case WPI_MODE_GPIO_DEVICE_WPI:
-        digitalWriteDevice(pinToGpio[pin], value);
-        return;
-      case WPI_MODE_GPIO_DEVICE_PHYS:
-        digitalWriteDevice(physToGpio[pin], value);
-        return;
-      case WPI_MODE_GPIO:
-        break;
-    }
+  //if ((pin & PI_GPIO_MASK) == 0)		// On-Board Pin
+  //{
+    
+    // switch(wiringPiMode) {
+    //   default: //WPI_MODE_GPIO_SYS
+    //     fprintf(stderr, "digitalWrite: invalid mode\n");
+    //     return;
+    //   case WPI_MODE_PINS:
+    //     pin = pinToGpio [pin];
+    //     break;
+    //   case WPI_MODE_PHYS:
+    //     pin = physToGpio [pin];
+    //     break;
+    //   case WPI_MODE_GPIO_DEVICE_BCM:
+    //     digitalWriteDevice(pin, value);
+    //     return;
+    //   case WPI_MODE_GPIO_DEVICE_WPI:
+    //     digitalWriteDevice(pinToGpio[pin], value);
+    //     return;
+    //   case WPI_MODE_GPIO_DEVICE_PHYS:
+    //     digitalWriteDevice(physToGpio[pin], value);
+    //     return;
+    //   case WPI_MODE_GPIO:
+    //     break;
+    // }
 
-    if (PI_MODEL_5 == RaspberryPiModel) {
-      if (value == LOW) {
-        //printf("Set pin %d >>0x%08x<< to low\n", pin, 1<<pin);
-        rio[RP1_RIO_OUT + RP1_CLR_OFFSET] = 1<<pin;
-      } else {
-        //printf("Set pin %d >>0x%08x<< to high\n", pin, 1<<pin);
-        rio[RP1_RIO_OUT + RP1_SET_OFFSET] = 1<<pin;
-      }
-    } else {
-      if (value == LOW)
-        *(gpio + gpioToGPCLR [pin]) = 1 << (pin & 31) ;
-      else
-        *(gpio + gpioToGPSET [pin]) = 1 << (pin & 31) ;
-    }
+    // if (PI_MODEL_5 == RaspberryPiModel) {
+    //   if (value == LOW) {
+    //     //printf("Set pin %d >>0x%08x<< to low\n", pin, 1<<pin);
+    //     rio[RP1_RIO_OUT + RP1_CLR_OFFSET] = 1<<pin;
+    //   } else {
+    //     //printf("Set pin %d >>0x%08x<< to high\n", pin, 1<<pin);
+    //     rio[RP1_RIO_OUT + RP1_SET_OFFSET] = 1<<pin;
+    //   }
+    // } else {
+    //   if (value == LOW)
+    //     *(gpio + gpioToGPCLR [pin]) = 1 << (pin & 31) ;
+    //   else
+    //     *(gpio + gpioToGPSET [pin]) = 1 << (pin & 31) ;
+    // }
   }
   else
   {
@@ -2342,48 +2345,49 @@ void digitalWrite8 (int pin, int value)
 
 void pwmWrite (int pin, int value)
 {
-  struct wiringPiNodeStruct *node = wiringPiNodes ;
+  LOG_INFO("Wrote to pin %d the value %d", pin,value);
+  // struct wiringPiNodeStruct *node = wiringPiNodes ;
 
-  setupCheck ("pwmWrite") ;
+  // setupCheck ("pwmWrite") ;
 
-  if ((pin & PI_GPIO_MASK) == 0)		// On-Board Pin
-  {
-    /**/ if (wiringPiMode == WPI_MODE_PINS)
-      pin = pinToGpio [pin] ;
-    else if (wiringPiMode == WPI_MODE_PHYS)
-      pin = physToGpio [pin] ;
-    else if (wiringPiMode != WPI_MODE_GPIO)
-      return ;
+  // if ((pin & PI_GPIO_MASK) == 0)		// On-Board Pin
+  // {
+  //   /**/ if (wiringPiMode == WPI_MODE_PINS)
+  //     pin = pinToGpio [pin] ;
+  //   else if (wiringPiMode == WPI_MODE_PHYS)
+  //     pin = physToGpio [pin] ;
+  //   else if (wiringPiMode != WPI_MODE_GPIO)
+  //     return ;
 
-    /* would be possible on ms mode but not on bal, deactivated, use pwmc modify instead
-    if (piGpioBase == GPIO_PERI_BASE_2711) {
-      value = (OSC_FREQ_BCM2711*value)/OSC_FREQ_DEFAULT;
-    }
-    */
-    usingGpioMemCheck ("pwmWrite") ;
-    int channel = gpioToPwmPort[pin];
-    int readback = 0x00;
-    if (PI_MODEL_5 == RaspberryPiModel ) {
-      if (channel>=0 && channel<=3) {
-        unsigned int addr = RP1_PWM0_CHAN_START+RP1_PWM0_CHAN_OFFSET*channel+RP1_PWM0_CHAN_DUTY;
-        pwm[addr] = value;
-        readback = pwm[addr];
-      } else {
-        fprintf(stderr, "pwmWrite: invalid channel at GPIO pin %d \n", pin);
-      }
-    } else {
-      *(pwm + channel) = value ;
-      readback = *(pwm + channel);
-    }
-    if (wiringPiDebug) {
-      printf ("PWM value(duty): %u. Current register: 0x%08X\n", value, readback);
-    }
-  }
-  else
-  {
-    if ((node = wiringPiFindNode (pin)) != NULL)
-      node->pwmWrite (node, pin, value) ;
-  }
+  //   /* would be possible on ms mode but not on bal, deactivated, use pwmc modify instead
+  //   if (piGpioBase == GPIO_PERI_BASE_2711) {
+  //     value = (OSC_FREQ_BCM2711*value)/OSC_FREQ_DEFAULT;
+  //   }
+  //   */
+  //   usingGpioMemCheck ("pwmWrite") ;
+  //   int channel = gpioToPwmPort[pin];
+  //   int readback = 0x00;
+  //   if (PI_MODEL_5 == RaspberryPiModel ) {
+  //     if (channel>=0 && channel<=3) {
+  //       unsigned int addr = RP1_PWM0_CHAN_START+RP1_PWM0_CHAN_OFFSET*channel+RP1_PWM0_CHAN_DUTY;
+  //       pwm[addr] = value;
+  //       readback = pwm[addr];
+  //     } else {
+  //       fprintf(stderr, "pwmWrite: invalid channel at GPIO pin %d \n", pin);
+  //     }
+  //   } else {
+  //     *(pwm + channel) = value ;
+  //     readback = *(pwm + channel);
+  //   }
+  //   if (wiringPiDebug) {
+  //     printf ("PWM value(duty): %u. Current register: 0x%08X\n", value, readback);
+  //   }
+  // }
+  // else
+  // {
+  //   if ((node = wiringPiFindNode (pin)) != NULL)
+  //     node->pwmWrite (node, pin, value) ;
+  // }
 }
 
 
@@ -3430,4 +3434,26 @@ int wiringPiSetupSys (void)
   if (wiringPiDebug)
     printf ("wiringPi: wiringPiSetupSys called\n") ;
   return wiringPiSetupGpioDevice(WPI_PIN_BCM);
+}
+
+
+
+/*
+  logger function:
+    call at breakpoints to see when function is called 
+  EXAMPLE:
+  logger("digital Write to pin 5 called", __FILE__, __LINE__);
+  digitalWrite()
+*/
+void logger(char * msg, char * src, int line){
+  FILE * file;
+  file = fopen("log.txt", "a");
+  if(file == NULL){
+    printf("Error Opening File");
+    exit(1);
+  }
+
+  fprintf(file, "%s:%d:%s\n", src, line, msg);
+  fclose(file);
+  printf(file, "%s:%d:%s\n", src, line, msg);
 }

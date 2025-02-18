@@ -258,6 +258,7 @@ extern          void digitalWrite8       (int pin, int value) ;
 extern          void pwmWrite            (int pin, int value) ;
 extern          int  analogRead          (int pin) ;
 extern          void analogWrite         (int pin, int value) ;
+extern          void logger              (char * msg, char * src, int line) ;
 
 // PiFace specifics
 //	(Deprecated)
