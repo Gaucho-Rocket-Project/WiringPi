@@ -1885,7 +1885,7 @@ void pinModeFlagsDevice (int pin, int mode, unsigned int flags) {
 void pinModeDevice (int pin, int mode) {
   pinModeFlagsDevice(pin, mode, lineFlags[pin]);
 }
-
+//modified for testing purposes
 void pinMode (int pin, int mode)
 {
   printf("Set pin %d to mode %d", pin,mode);
@@ -2262,7 +2262,7 @@ void digitalWriteDevice (int pin, int value) {
   }
   return; // error
 }
-
+//modified for testing purposes
 void digitalWrite (int pin, int value)
 {
   printf("Sending signal to pin %d with value %d",pin,value);
@@ -2342,7 +2342,7 @@ void digitalWrite8 (int pin, int value)
  *	Set an output PWM value
  *********************************************************************************
  */
-
+//modified for testing purposes
 void pwmWrite (int pin, int value)
 {
   LOG_INFO("Wrote to pin %d the value %d", pin,value);
